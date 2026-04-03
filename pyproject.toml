@@ -1,0 +1,9 @@
+[project]
+name = "lox-interpreter"
+version = "0.1.0"
+description = "Lox language interpreter coded in python"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pytest>=9.0.2",
+]
