@@ -1,5 +1,9 @@
+from Lox import Lox
+
+
 def main():
-    print("Hello from lox-interpreter!")
+    lox = Lox()
+    lox.run()
 
 
 if __name__ == "__main__":
