@@ -1,8 +1,9 @@
 from Statement import Statement
-from Expression import Expression
+from lox.Expression import Expression as Expr
+
 
 class Expression(Statement):
-    def __init__(self, expression: Expression):
+    def __init__(self, expression: Expr):
         self.expression = expression
 
     def __str__(self) -> str:

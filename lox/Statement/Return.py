@@ -1,5 +1,5 @@
 from Statement import Statement
-from Expression import Expression
+from lox.Expression import Expression
 
 class Return(Statement):
     def __init__(self, value: Expression | None):

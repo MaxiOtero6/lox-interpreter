@@ -29,7 +29,7 @@ class Scanner():
 
     def _scan_token(self) -> None:
         c = self._advance()
-        
+
         match c:
             case " " | "\r" | "\t":
                 pass
@@ -65,22 +65,32 @@ class Scanner():
                     self._add_token(TokenType.SLASH)
 
             case "!":
-                self._add_token(TokenType.BANG_EQUAL if self._match("=") else TokenType.NOT)
+                self._add_token(TokenType.BANG_EQUAL if self._match(
+                    "=") else TokenType.NOT)
             case ">":
-                self._add_token(TokenType.GREATER_EQUAL if self._match("=") else TokenType.GREATER)
+                self._add_token(TokenType.GREATER_EQUAL if self._match(
+                    "=") else TokenType.GREATER)
             case "<":
-                self._add_token(TokenType.LESS_EQUAL if self._match("=") else TokenType.LESS)
+                self._add_token(TokenType.LESS_EQUAL if self._match(
+                    "=") else TokenType.LESS)
             case "+":
-                self._add_token(TokenType.PLUS_PLUS if self._match("+") else TokenType.PLUS)
+                self._add_token(TokenType.PLUS_PLUS if self._match(
+                    "+") else TokenType.PLUS)
             case "-":
-                self._add_token(TokenType.MINUS_MINUS if self._match("-") else TokenType.MINUS)
+                self._add_token(TokenType.MINUS_MINUS if self._match(
+                    "-") else TokenType.MINUS)
             case "*":
-                self._add_token(TokenType.STAR_STAR if self._match("*") else TokenType.STAR)
+                self._add_token(TokenType.STAR_STAR if self._match(
+                    "*") else TokenType.STAR)
+            case "=":
+                self._add_token(
+                    TokenType.EQUAL_EQUAL if self._match(
+                        "=") else TokenType.EQUAL
+                )
 
-            
             case '"':
                 self._string()
-            
+
             case _ if c.isdigit():
                 self._number()
 
@@ -88,8 +98,8 @@ class Scanner():
                 self._identifier()
 
             case _:
-                raise SyntaxError(f"Unexpected character '{c}' at line {self.line}")
-            
+                raise SyntaxError(
+                    f"Unexpected character '{c}' at line {self.line}")
 
     def _add_token(
         self,
@@ -97,7 +107,7 @@ class Scanner():
         literal: LiteralType = None,
     ) -> None:
         lexeme = self.source[self.start:self.current]
-        token = Token(token_type, lexeme=lexeme, literal=literal)
+        token = Token(token_type, lexeme=lexeme, literal=literal, line=self.line)
         self.tokens.append(token)
 
     def _string(self) -> None:
@@ -112,7 +122,7 @@ class Scanner():
 
         self._advance()
 
-        value = self.source[self.start + 1 : self.current - 1]
+        value = self.source[self.start + 1: self.current - 1]
         self._add_token(TokenType.STRING, literal=value)
 
     def _number(self) -> None:
@@ -132,12 +142,10 @@ class Scanner():
         token_type = KeywordsMap.get(lexeme, TokenType.IDENTIFIER)
         self._add_token(token_type)
 
-
     def _is_at_end(self) -> bool:
         if self.current >= len(self.source):
             return True
         return False
-        
 
     def _advance(self) -> str:
         actual = self.source[self.current]
@@ -148,7 +156,6 @@ class Scanner():
         if self._is_at_end():
             return "\0"
         return self.source[self.current]
-        
 
     def _peek_next(self) -> str:
         if self.current + 1 >= len(self.source):
