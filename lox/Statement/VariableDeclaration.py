@@ -1,9 +1,10 @@
 from Statement import Statement
 from Token import Token
+from lox.Expression import Expression
 
 
 class VariableDeclaration(Statement):
-    def __init__(self, name: Token, initializer: Statement | None):
+    def __init__(self, name: Token, initializer: Expression | None):
         self.name = name
         self.initializer = initializer
 

@@ -1,5 +1,5 @@
 from Statement import Statement
-from Expression import Expression
+from lox.Expression import Expression
 
 class While(Statement):
     def __init__(self, condition: Expression, body: Statement):

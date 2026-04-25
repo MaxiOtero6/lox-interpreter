@@ -1,5 +1,5 @@
 from Statement import Statement
-from Expression import Expression
+from lox.Expression import Expression
 
 class If(Statement):
     def __init__(self, condition: Expression, then_branch: Statement, else_branch: Statement | None):
