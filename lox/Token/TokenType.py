@@ -7,6 +7,7 @@ class TokenType(Enum):
     DOT = '.'
     COLON = ':'
     QUESTION = '?'
+    EQUAL = '='
     # Calc
     MINUS = '-'
     PLUS = '+'
