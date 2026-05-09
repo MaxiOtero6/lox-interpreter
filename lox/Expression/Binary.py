@@ -1,6 +1,6 @@
-from Token import Token
+from lox.Token.Token import Token
 
-from Expression import Expression
+from lox.Expression.Expression import Expression
 
 
 class Binary(Expression):

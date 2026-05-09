@@ -1,9 +1,13 @@
+from typing import TYPE_CHECKING
+
 from lox.Environment import Environment
-from lox.Interpreter import Interpreter
 from lox.Statement.FunctionDeclaration import FunctionDeclaration
 from lox.Statement.Statement import Statement
 
 from . import ReturnException
+
+if TYPE_CHECKING:
+    from lox.Interpreter import Interpreter
 
 
 class Function:
@@ -14,7 +18,7 @@ class Function:
     def arity(self):
         return len(self.declaration.params)
 
-    def __call__(self, interpreter: Interpreter, arguments: list[Statement]):
+    def __call__(self, interpreter: "Interpreter", arguments: list[Statement]):
         environment = Environment(self.closure)
 
         for i in range(len(self.declaration.params)):

@@ -1,5 +1,5 @@
-from Expression import Expression
-from Token import Token
+from lox.Expression.Expression import Expression
+from lox.Token.Token import Token
 
 class Logic(Expression):
     """

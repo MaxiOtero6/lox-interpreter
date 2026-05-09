@@ -1,4 +1,4 @@
-from Statement import Statement
+from lox.Statement.Statement import Statement
 from lox.Expression import Expression
 
 
