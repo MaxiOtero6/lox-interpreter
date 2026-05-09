@@ -1,10 +1,10 @@
-import lox.Statement as Statement
 import lox.Expression as Expression
+import lox.Statement as Statement
 from lox.Token.Token import Token
 from lox.Token.TokenType import TokenType
 
 
-class Parser():
+class Parser:
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens
         self.pointer = 0
@@ -21,14 +21,14 @@ class Parser():
         """
         Returns the next token without consuming it.
         """
-        
+
         return self.tokens[self.pointer + 1]
 
     def _next(self) -> Token:
         """
         Returns the next token and consumes it.
         """
-        
+
         if not self._look_next().type == TokenType.EOF:
             self.pointer += 1
 
@@ -38,7 +38,7 @@ class Parser():
         """
         Returns the previous token.
         """
-        
+
         return self.tokens[self.pointer - 1]
 
     def _match(self, types: set[TokenType]) -> bool:
@@ -47,7 +47,7 @@ class Parser():
         If the next token is of the specified type, it is consumed and True is returned.
         Otherwise, False is returned and the token is not consumed.
         """
-        
+
         if self._look_next().type in types:
             self._next()
             return True
@@ -58,9 +58,9 @@ class Parser():
 
     def _make_statement(self) -> Statement.Statement:
         """
-            Statement factory
+        Statement factory
         """
-        
+
         if self._match({TokenType.VAR}):
             return self._make_var_statement()
 
@@ -89,60 +89,65 @@ class Parser():
 
     def _make_print_statement(self) -> Statement.Statement:
         """
-            Parses a print statement.
-                print <expression>;
+        Parses a print statement.
+            print <expression>;
         """
-        
+
         expression = self._make_expression()
 
         if not self._match({TokenType.SEMICOLON}):
             raise SyntaxError(
-                f"Expected '{TokenType.SEMICOLON}' after value instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.SEMICOLON}' after value instead got '{self._look_next().type}'"
+            )
 
         return Statement.Print(expression)
 
     def _make_var_statement(self) -> Statement.Statement:
         """
-            Parses a variable declaration statement.
-                var <name> = <expression>;
+        Parses a variable declaration statement.
+            var <name> = <expression>;
         """
-        
+
         if not self._match({TokenType.IDENTIFIER}):
             raise SyntaxError(
-                f"Expected variable name after 'var' instead got '{self._look_next().type}'")
+                f"Expected variable name after 'var' instead got '{self._look_next().type}'"
+            )
 
         name = self._prev()
 
-        value = self._make_expression() if self._match(
-            {TokenType.EQUAL}) else None
+        value = self._make_expression() if self._match({TokenType.EQUAL}) else None
 
         if not self._match({TokenType.SEMICOLON}):
             raise SyntaxError(
-                f"Expected '{TokenType.SEMICOLON}' after variable declaration instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.SEMICOLON}' after variable declaration instead got '{self._look_next().type}'"
+            )
 
         return Statement.VariableDeclaration(name, value)
 
     def _make_fun_statement(self) -> Statement.Statement:
         """
-            Parses a function declaration statement.
-                fun <name>(<params>) { <body> }
+        Parses a function declaration statement.
+            fun <name>(<params>) { <body> }
         """
-        
+
         if not self._match({TokenType.IDENTIFIER}):
             raise SyntaxError(
-                f"Expected function name after 'fun' instead got '{self._look_next().type}'")
+                f"Expected function name after 'fun' instead got '{self._look_next().type}'"
+            )
 
         name = self._prev()
         params: list[Token] = []
 
         if not self._match({TokenType.LEFT_PAREN}):
             raise SyntaxError(
-                f"Expected '{TokenType.LEFT_PAREN}' after function name instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.LEFT_PAREN}' after function name instead got '{self._look_next().type}'"
+            )
 
-        while not self._look_next().type in {TokenType.EOF, TokenType.RIGHT_PAREN}:
+        while self._look_next().type not in {TokenType.EOF, TokenType.RIGHT_PAREN}:
             if not self._match({TokenType.IDENTIFIER}):
                 raise SyntaxError(
-                    f"Expected parameter name instead got '{self._look_next().type}'")
+                    f"Expected parameter name instead got '{self._look_next().type}'"
+                )
 
             params.append(self._prev())
 
@@ -151,11 +156,13 @@ class Parser():
 
         if not self._match({TokenType.RIGHT_PAREN}):
             raise SyntaxError(
-                f"Expected '{TokenType.RIGHT_PAREN}' after parameters instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.RIGHT_PAREN}' after parameters instead got '{self._look_next().type}'"
+            )
 
         if not self._match({TokenType.LEFT_BRACE}):
             raise SyntaxError(
-                f"Expected '{TokenType.LEFT_BRACE}' before function body instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.LEFT_BRACE}' before function body instead got '{self._look_next().type}'"
+            )
 
         body = self._get_block()
 
@@ -163,56 +170,63 @@ class Parser():
 
     def _make_return_statement(self) -> Statement.Statement:
         """
-            Parses a return statement.
-                return <expression>;
+        Parses a return statement.
+            return <expression>;
         """
-        
-        value = self._make_expression() if not self._look_next(
-        ).type == TokenType.SEMICOLON else None
+
+        value = (
+            self._make_expression()
+            if not self._look_next().type == TokenType.SEMICOLON
+            else None
+        )
 
         if not self._match({TokenType.SEMICOLON}):
             raise SyntaxError(
-                f"Expected '{TokenType.SEMICOLON}' after return value instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.SEMICOLON}' after return value instead got '{self._look_next().type}'"
+            )
 
         return Statement.Return(value)
 
     def _make_if_statement(self) -> Statement.Statement:
         """
-            Parses an if statement.
-                if (<condition>) <then_branch> else <else_branch>
+        Parses an if statement.
+            if (<condition>) <then_branch> else <else_branch>
         """
-        
+
         if not self._match({TokenType.LEFT_PAREN}):
             raise SyntaxError(
-                f"Expected '{TokenType.LEFT_PAREN}' after 'if' instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.LEFT_PAREN}' after 'if' instead got '{self._look_next().type}'"
+            )
 
         condition = self._make_expression()
 
         if not self._match({TokenType.RIGHT_PAREN}):
             raise SyntaxError(
-                f"Expected '{TokenType.RIGHT_PAREN}' after condition instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.RIGHT_PAREN}' after condition instead got '{self._look_next().type}'"
+            )
 
         then_branch = self._make_statement()
-        else_branch = self._make_statement() if self._match(
-            {TokenType.ELSE}) else None
+        else_branch = self._make_statement() if self._match({TokenType.ELSE}) else None
 
         return Statement.If(condition, then_branch, else_branch)
 
     def _make_while_statement(self) -> Statement.Statement:
         """
-            Parses a while statement.
-                while (<condition>) <body>
+        Parses a while statement.
+            while (<condition>) <body>
         """
-        
+
         if not self._match({TokenType.LEFT_PAREN}):
             raise SyntaxError(
-                f"Expected '{TokenType.LEFT_PAREN}' after 'while' instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.LEFT_PAREN}' after 'while' instead got '{self._look_next().type}'"
+            )
 
         condition = self._make_expression()
 
         if not self._match({TokenType.RIGHT_PAREN}):
             raise SyntaxError(
-                f"Expected '{TokenType.RIGHT_PAREN}' after condition instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.RIGHT_PAREN}' after condition instead got '{self._look_next().type}'"
+            )
 
         body = self._make_statement()
 
@@ -220,21 +234,22 @@ class Parser():
 
     def _make_for_statement(self) -> Statement.Statement:
         """
-            Parses a for statement.
-                for (<initializer>; <condition>; <increment>) <body>
-            Internally, a for statement is desugared into a while statement with the following structure:
-                {
-                    <initializer>;
-                    while (<condition>) {
-                        <body>;
-                        <increment>;
-                    }
-                }        
+        Parses a for statement.
+            for (<initializer>; <condition>; <increment>) <body>
+        Internally, a for statement is desugared into a while statement with the following structure:
+            {
+                <initializer>;
+                while (<condition>) {
+                    <body>;
+                    <increment>;
+                }
+            }
         """
 
         if not self._match({TokenType.LEFT_PAREN}):
             raise SyntaxError(
-                f"Expected '{TokenType.LEFT_PAREN}' after 'for' instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.LEFT_PAREN}' after 'for' instead got '{self._look_next().type}'"
+            )
 
         initializer: Statement.Statement | None = None
         if self._match({TokenType.SEMICOLON}):
@@ -244,19 +259,27 @@ class Parser():
         else:
             initializer = self._make_expression_statement()
 
-        condition = self._make_expression() if not self._look_next(
-        ).type == TokenType.SEMICOLON else None
+        condition = (
+            self._make_expression()
+            if not self._look_next().type == TokenType.SEMICOLON
+            else None
+        )
 
         if not self._match({TokenType.SEMICOLON}):
             raise SyntaxError(
-                f"Expected '{TokenType.SEMICOLON}' after loop condition instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.SEMICOLON}' after loop condition instead got '{self._look_next().type}'"
+            )
 
-        increment = self._make_expression() if not self._look_next(
-        ).type == TokenType.RIGHT_PAREN else None
+        increment = (
+            self._make_expression()
+            if not self._look_next().type == TokenType.RIGHT_PAREN
+            else None
+        )
 
         if not self._match({TokenType.RIGHT_PAREN}):
             raise SyntaxError(
-                f"Expected '{TokenType.RIGHT_PAREN}' after for clauses instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.RIGHT_PAREN}' after for clauses instead got '{self._look_next().type}'"
+            )
 
         body = self._make_statement()
 
@@ -275,38 +298,40 @@ class Parser():
 
     def _get_block(self) -> list[Statement.Statement]:
         """
-            Parses a block statement into a list of statements.
-                { <statements> }
+        Parses a block statement into a list of statements.
+            { <statements> }
         """
-        
+
         statements: list[Statement.Statement] = []
-        while not self._look_next().type in {TokenType.EOF, TokenType.RIGHT_BRACE}:
+        while self._look_next().type not in {TokenType.EOF, TokenType.RIGHT_BRACE}:
             statements.append(self._make_statement())
 
         if not self._match({TokenType.RIGHT_BRACE}):
             raise SyntaxError(
-                f"Expected '{TokenType.RIGHT_BRACE}' after block instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.RIGHT_BRACE}' after block instead got '{self._look_next().type}'"
+            )
 
         return statements
 
-    def _make_block_statement(self) -> Statement.Statement:   
+    def _make_block_statement(self) -> Statement.Statement:
         """
-            Parses a block statement.
-                { <statements> }
+        Parses a block statement.
+            { <statements> }
         """
-             
+
         return Statement.Block(self._get_block())
 
     def _make_expression_statement(self) -> Statement.Statement:
         """
-            Parses an expression statement.
-                <expression>;
+        Parses an expression statement.
+            <expression>;
         """
         expression = self._make_expression()
 
         if not self._match({TokenType.SEMICOLON}):
             raise SyntaxError(
-                f"Expected '{TokenType.SEMICOLON}' after expression instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.SEMICOLON}' after expression instead got '{self._look_next().type}'"
+            )
 
         return Statement.Expression(expression)
 
@@ -314,33 +339,33 @@ class Parser():
 
     def _make_expression(self) -> Expression.Expression:
         """
-            Expression factory. It resolves the AST nodes precedence and associativity 
-            by calling the corresponding parsing method for each precedence level 
-            to achieve the correct order of operations in the resulting AST.
-            
-            The precedence levels are as follows (from lowest to highest):
-                - Assignment
-                - Ternary
-                - Logical OR
-                - Logical AND
-                - Equality
-                - Comparison
-                - Term
-                - Factor
-                - Unary
-                - Postfix
-                - Call
-                - Primary
+        Expression factory. It resolves the AST nodes precedence and associativity
+        by calling the corresponding parsing method for each precedence level
+        to achieve the correct order of operations in the resulting AST.
+
+        The precedence levels are as follows (from lowest to highest):
+            - Assignment
+            - Ternary
+            - Logical OR
+            - Logical AND
+            - Equality
+            - Comparison
+            - Term
+            - Factor
+            - Unary
+            - Postfix
+            - Call
+            - Primary
         """
-        
+
         return self._make_assignment_expression()
 
     def _make_assignment_expression(self) -> Expression.Expression:
         """
-            Parses an assignment expression.
-                <variable> = <expression>
+        Parses an assignment expression.
+            <variable> = <expression>
         """
-        
+
         expression = self._make_ternary_expression()
 
         if not self._match({TokenType.EQUAL}):
@@ -348,17 +373,18 @@ class Parser():
 
         if not isinstance(expression, Expression.Variable):
             raise SyntaxError(
-                f"Expected variable on left side of assignment instead got '{expression}'")
+                f"Expected variable on left side of assignment instead got '{expression}'"
+            )
 
         value = self._make_expression()
         return Expression.Assign(expression.name, value)
 
     def _make_ternary_expression(self) -> Expression.Expression:
         """
-            Parses a ternary expression.
-                <condition> ? <true_branch> : <false_branch>
+        Parses a ternary expression.
+            <condition> ? <true_branch> : <false_branch>
         """
-        
+
         expression = self._make_assignment_expression()
 
         if not self._match({TokenType.QUESTION}):
@@ -367,7 +393,8 @@ class Parser():
         true_branch = self._make_expression()
         if not self._match({TokenType.COLON}):
             raise SyntaxError(
-                f"Expected '{TokenType.COLON}' after true branch instead got '{self._look_next().type}'")
+                f"Expected '{TokenType.COLON}' after true branch instead got '{self._look_next().type}'"
+            )
 
         false_branch = self._make_expression()
         expression = Expression.Ternary(expression, true_branch, false_branch)
@@ -375,13 +402,15 @@ class Parser():
 
     def _make_logical_or_expression(self) -> Expression.Expression:
         """
-            Parses a logical OR expression.
-                <left> or <right>
+        Parses a logical OR expression.
+            <left> or <right>
         """
-        
+
         expression = self._make_logical_and_expression()
 
-        while not self._look_next().type == TokenType.EOF and self._match({TokenType.OR}):
+        while not self._look_next().type == TokenType.EOF and self._match(
+            {TokenType.OR}
+        ):
             operator = self._prev()
             right = self._make_logical_and_expression()
             expression = Expression.Logic(expression, operator, right)
@@ -390,13 +419,15 @@ class Parser():
 
     def _make_logical_and_expression(self) -> Expression.Expression:
         """
-            Parses a logical AND expression.
-                <left> and <right>
+        Parses a logical AND expression.
+            <left> and <right>
         """
-        
+
         expression = self._make_equality_expression()
 
-        while not self._look_next().type == TokenType.EOF and self._match({TokenType.AND}):
+        while not self._look_next().type == TokenType.EOF and self._match(
+            {TokenType.AND}
+        ):
             operator = self._prev()
             right = self._make_equality_expression()
             expression = Expression.Logic(expression, operator, right)
@@ -405,14 +436,16 @@ class Parser():
 
     def _make_equality_expression(self) -> Expression.Expression:
         """
-            Parses an equality expression.
-                <left> == <right>
-                <left> != <right>
+        Parses an equality expression.
+            <left> == <right>
+            <left> != <right>
         """
-        
+
         expression = self._make_comparison_expression()
 
-        while not self._look_next().type == TokenType.EOF and self._match({TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL}):
+        while not self._look_next().type == TokenType.EOF and self._match(
+            {TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL}
+        ):
             operator = self._prev()
             right = self._make_comparison_expression()
             expression = Expression.Binary(expression, operator, right)
@@ -421,18 +454,23 @@ class Parser():
 
     def _make_comparison_expression(self) -> Expression.Expression:
         """
-            Parses a comparison expression.
-                <left> > <right>
-                <left> >= <right>
-                <left> < <right>
-                <left> <= <right>
+        Parses a comparison expression.
+            <left> > <right>
+            <left> >= <right>
+            <left> < <right>
+            <left> <= <right>
         """
-        
+
         expression = self._make_term_expression()
 
-        while not self._look_next().type == TokenType.EOF and self._match({
-            TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL
-        }):
+        while not self._look_next().type == TokenType.EOF and self._match(
+            {
+                TokenType.GREATER,
+                TokenType.GREATER_EQUAL,
+                TokenType.LESS,
+                TokenType.LESS_EQUAL,
+            }
+        ):
             operator = self._prev()
             right = self._make_term_expression()
             expression = Expression.Binary(expression, operator, right)
@@ -441,14 +479,16 @@ class Parser():
 
     def _make_term_expression(self) -> Expression.Expression:
         """
-            Parses a term expression.
-                <left> + <right>
-                <left> - <right>
+        Parses a term expression.
+            <left> + <right>
+            <left> - <right>
         """
-        
+
         expression = self._make_factor_expression()
 
-        while not self._look_next().type == TokenType.EOF and self._match({TokenType.MINUS, TokenType.PLUS}):
+        while not self._look_next().type == TokenType.EOF and self._match(
+            {TokenType.MINUS, TokenType.PLUS}
+        ):
             operator = self._prev()
             right = self._make_factor_expression()
             expression = Expression.Binary(expression, operator, right)
@@ -457,15 +497,17 @@ class Parser():
 
     def _make_factor_expression(self) -> Expression.Expression:
         """
-            Parses a factor expression.
-                <left> * <right>
-                <left> / <right>
-                <left> % <right>
+        Parses a factor expression.
+            <left> * <right>
+            <left> / <right>
+            <left> % <right>
         """
-        
+
         expression = self._make_unary_expression()
 
-        while not self._look_next().type == TokenType.EOF and self._match({TokenType.STAR, TokenType.SLASH, TokenType.PERCENT}):
+        while not self._look_next().type == TokenType.EOF and self._match(
+            {TokenType.STAR, TokenType.SLASH, TokenType.PERCENT}
+        ):
             operator = self._prev()
             right = self._make_unary_expression()
             expression = Expression.Binary(expression, operator, right)
@@ -474,13 +516,13 @@ class Parser():
 
     def _make_unary_expression(self) -> Expression.Expression:
         """
-            Parses a unary expression.
-                - <expression>
-                ! <expression>
-                ++ <variable>
-                -- <variable>
+        Parses a unary expression.
+            - <expression>
+            ! <expression>
+            ++ <variable>
+            -- <variable>
         """
-        
+
         if self._match({TokenType.MINUS, TokenType.NOT}):
             operator = self._prev()
             expression = self._make_unary_expression()
@@ -492,20 +534,24 @@ class Parser():
 
             if not isinstance(expression, Expression.Variable):
                 raise SyntaxError(
-                    f"Expected variable after prefix operator instead got '{expression}'")
+                    f"Expected variable after prefix operator instead got '{expression}'"
+                )
 
             # TODO: checkear que funcione con var--
-            return Expression.Assign(expression.name, Expression.Binary(expression, operator, Expression.Literal(1)))
+            return Expression.Assign(
+                expression.name,
+                Expression.Binary(expression, operator, Expression.Literal(1)),
+            )
 
         return self._make_postfix_expression()
 
     def _make_postfix_expression(self) -> Expression.Expression:
         """
-            Parses a postfix expression.
-                <variable>++
-                <variable>--
+        Parses a postfix expression.
+            <variable>++
+            <variable>--
         """
-        
+
         expression = self._make_call_expression()
 
         if self._match({TokenType.PLUS_PLUS, TokenType.MINUS_MINUS}):
@@ -513,7 +559,8 @@ class Parser():
 
             if not isinstance(expression, Expression.Variable):
                 raise SyntaxError(
-                    f"Expected variable before postfix operator instead got '{expression}'")
+                    f"Expected variable before postfix operator instead got '{expression}'"
+                )
 
             expression = Expression.Postfix(operator, expression)
 
@@ -521,39 +568,42 @@ class Parser():
 
     def _make_call_expression(self) -> Expression.Expression:
         """
-            Parses a call expression.
-                <callee>(<arguments>)
+        Parses a call expression.
+            <callee>(<arguments>)
         """
-        
+
         expression = self._make_primary_expression()
 
         while self._match({TokenType.LEFT_PAREN}):
             arguments = []
-            while not self._look_next().type in {TokenType.EOF, TokenType.RIGHT_PAREN}:
+            while self._look_next().type not in {TokenType.EOF, TokenType.RIGHT_PAREN}:
                 arguments.append(self._make_expression())
-                while not self._look_next().type == TokenType.EOF and self._match({TokenType.COMMA}):
+                while not self._look_next().type == TokenType.EOF and self._match(
+                    {TokenType.COMMA}
+                ):
                     arguments.append(self._make_expression())
 
                 return Expression.Call(expression, arguments)
 
             if not self._match({TokenType.RIGHT_PAREN}):
                 raise SyntaxError(
-                    f"Expected '{TokenType.RIGHT_PAREN}' after arguments instead got '{self._look_next().type}'")
+                    f"Expected '{TokenType.RIGHT_PAREN}' after arguments instead got '{self._look_next().type}'"
+                )
 
         return expression
 
     def _make_primary_expression(self) -> Expression.Expression:
         """
-            Parses a primary expression.
-                true
-                false
-                nil
-                <number>
-                <string>
-                <identifier>
-                (<expression>)
+        Parses a primary expression.
+            true
+            false
+            nil
+            <number>
+            <string>
+            <identifier>
+            (<expression>)
         """
-        
+
         if self._match({TokenType.FALSE}):
             return Expression.Literal(False)
         if self._match({TokenType.TRUE}):
@@ -571,8 +621,8 @@ class Parser():
             expression = self._make_expression()
             if not self._match({TokenType.RIGHT_PAREN}):
                 raise SyntaxError(
-                    f"Expected '{TokenType.RIGHT_PAREN}' after expression instead got '{self._look_next().type}'")
+                    f"Expected '{TokenType.RIGHT_PAREN}' after expression instead got '{self._look_next().type}'"
+                )
             return Expression.Group(expression)
 
-        raise SyntaxError(
-            f"Expected expression instead got '{self._look_next()}'")
+        raise SyntaxError(f"Expected expression instead got '{self._look_next()}'")
