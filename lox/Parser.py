@@ -22,7 +22,7 @@ class Parser:
         Returns the next token without consuming it.
         """
 
-        return self.tokens[self.pointer + 1]
+        return self.tokens[self.pointer]
 
     def _next(self) -> Token:
         """
@@ -32,7 +32,7 @@ class Parser:
         if not self._look_next().type == TokenType.EOF:
             self.pointer += 1
 
-        return self.tokens[self.pointer]
+        return self.tokens[self.pointer - 1]
 
     def _prev(self) -> Token:
         """
@@ -115,7 +115,8 @@ class Parser:
 
         name = self._prev()
 
-        value = self._make_expression() if self._match({TokenType.EQUAL}) else None
+        value = self._make_expression() if self._match(
+            {TokenType.EQUAL}) else None
 
         if not self._match({TokenType.SEMICOLON}):
             raise SyntaxError(
@@ -206,7 +207,8 @@ class Parser:
             )
 
         then_branch = self._make_statement()
-        else_branch = self._make_statement() if self._match({TokenType.ELSE}) else None
+        else_branch = self._make_statement() if self._match(
+            {TokenType.ELSE}) else None
 
         return Statement.If(condition, then_branch, else_branch)
 
@@ -385,7 +387,7 @@ class Parser:
             <condition> ? <true_branch> : <false_branch>
         """
 
-        expression = self._make_assignment_expression()
+        expression = self._make_logical_or_expression()
 
         if not self._match({TokenType.QUESTION}):
             return expression
@@ -625,4 +627,5 @@ class Parser:
                 )
             return Expression.Group(expression)
 
-        raise SyntaxError(f"Expected expression instead got '{self._look_next()}'")
+        raise SyntaxError(
+            f"Expected expression instead got '{self._look_next()}'")

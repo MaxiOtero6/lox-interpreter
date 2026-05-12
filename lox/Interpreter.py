@@ -79,7 +79,7 @@ class Interpreter:
                     raise RuntimeError(
                         "Postfix operator can only be applied to variables"
                     )
-                    
+
                 old_value = (
                     self.current_env.get(
                         postfix.left.name.lexeme, self.depths[postfix.left]
@@ -89,7 +89,8 @@ class Interpreter:
                 )
 
                 if not isinstance(old_value, (int, float)):
-                    raise RuntimeError(f"Operand must be a number, got {type(old_value)}")
+                    raise RuntimeError(
+                        f"Operand must be a number, got {type(old_value)}")
 
                 match postfix.operator.type:
                     case TokenType.PLUS_PLUS:
@@ -132,7 +133,7 @@ class Interpreter:
                                 f"Operand must be a number, got {type(right)}"
                             )
                         return -right
-                        
+
                     case TokenType.NOT:
                         return not bool(right)
                     case _:
@@ -155,7 +156,8 @@ class Interpreter:
                 arguments = [self.evaluate(arg) for arg in call.arguments]
 
                 if not isinstance(callee, Function):
-                    raise RuntimeError(f"Can only call functions, got {type(callee)}")
+                    raise RuntimeError(
+                        f"Can only call functions, got {type(callee)}")
 
                 if len(arguments) != callee.arity():
                     raise RuntimeError(
@@ -168,26 +170,24 @@ class Interpreter:
                 left = self.evaluate(binary.left)
                 right = self.evaluate(binary.right)
 
-                if (left_number := isinstance(left, (int, float))) and (
-                    right_number := isinstance(right, (int, float))
-                ):
+                if isinstance(left, (int, float)) and isinstance(right, (int, float)):
                     match binary.operator.type:
                         case TokenType.PLUS:
-                            return left_number + right_number
+                            return left + right
                         case TokenType.MINUS:
-                            return left_number - right_number
+                            return left - right
                         case TokenType.STAR:
-                            return left_number * right_number
+                            return left * right
                         case TokenType.SLASH:
-                            return left_number / right_number
+                            return left / right
                         case TokenType.GREATER:
-                            return left_number > right_number
+                            return left > right
                         case TokenType.GREATER_EQUAL:
-                            return left_number >= right_number
+                            return left >= right
                         case TokenType.LESS:
-                            return left_number < right_number
+                            return left < right
                         case TokenType.LESS_EQUAL:
-                            return left_number <= right_number
+                            return left <= right
 
                 match binary.operator.type:
                     case TokenType.EQUAL_EQUAL:
