@@ -1,5 +1,5 @@
-from Statement import Statement
-from Token import Token
+from lox.Statement.Statement import Statement
+from lox.Token.Token import Token
 from lox.Expression import Expression
 
 

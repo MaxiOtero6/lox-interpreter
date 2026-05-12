@@ -1,4 +1,4 @@
-from Expression import Expression
+from lox.Expression.Expression import Expression
 
 
 class Call(Expression):

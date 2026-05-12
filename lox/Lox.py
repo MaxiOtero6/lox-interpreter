@@ -3,10 +3,12 @@ from enum import Enum
 
 from prompt_toolkit import PromptSession
 
-from lox.Scanner import Scanner
+from lox.Interpreter import Interpreter
 from lox.Parser import Parser
 from lox.Resolver import Resolver
-from lox.Interpreter import Interpreter
+from lox.Scanner import Scanner
+from lox.Statement.Statement import Statement
+from lox.Token.Token import Token
 
 
 class _LoxMode(Enum):
@@ -23,39 +25,74 @@ class Lox:
         self.mode = _LoxMode.FULL
 
     def _get_args(self):
-        parser = argparse.ArgumentParser(
-            prog="lox",
-            description="Lox Interpreter"
-        )
+        parser = argparse.ArgumentParser(prog="lox", description="Lox Interpreter")
 
         parser.add_argument(
-            "--scan",
-            action="store_true",
-            help="Run the scanner and print the tokens"
+            "--scan", action="store_true", help="Run the scanner and print the tokens"
         )
         parser.add_argument(
-            "--parse",
-            action="store_true",
-            help="Run the parser and print the AST"
+            "--parse", action="store_true", help="Run the parser and print the AST"
         )
         parser.add_argument(
             "--resolve",
             action="store_true",
-            help="Run the resolver and print the resolved AST"
+            help="Run the resolver and print the resolved AST",
         )
         parser.add_argument(
-            "file",
-            nargs="?",
-            help="Lox source file to execute instead of REPL"
+            "file", nargs="?", help="Lox source file to execute instead of REPL"
         )
 
-        return parser.parse_args()
+        args = parser.parse_args()
+        args.repl = not args.file
+        return args
+
+    def _scan(self, source: str) -> list[Token]:
+        scanner = Scanner()
+        try:
+            return scanner.scan(source)
+        except Exception as e:
+            raise RuntimeError(f"Scanner error: {e}")
+
+    def _parse(self, tokens: list[Token]) -> list[Statement]:
+        parser = Parser(tokens)
+        try:
+            return parser.parse()
+        except Exception as e:
+            raise RuntimeError(f"Parser error: {e}")
+
+    def _resolve(self, statements: list[Statement], interpreter: Interpreter):
+        resolver = Resolver(interpreter)
+        try:
+            for s in statements:
+                resolver.resolve(s)
+        except Exception as e:
+            raise RuntimeError(f"Resolver error: {e}")
+
+    def _interpret(self, statements: list[Statement], interpreter: Interpreter):
+        try:
+            return interpreter.interpret(statements)
+        except Exception as e:
+            raise RuntimeError(f"Runtime error: {e}")
 
     def _run(self, source: str):
-        scanner = Scanner()
-        parser = Parser()
-        resolver = Resolver()
+        tokens = self._scan(source)
+        if self.mode == _LoxMode.SCAN:
+            for token in tokens:
+                print(token)
+            return
+
+        statements = self._parse(tokens)
+        if self.mode == _LoxMode.PARSE:
+            for statement in statements:
+                print(statement)
+            return
+
         interpreter = Interpreter()
+        self._resolve(statements, interpreter)
+        
+        result = self._interpret(statements, interpreter)
+        if self.args.repl and result is not None:
+            print(result)
 
     def run(self):
         if self.args.scan:
@@ -77,3 +114,5 @@ class Lox:
                 self._run(line)
             except (EOFError, KeyboardInterrupt):
                 break
+            except RuntimeError as e:
+                print(e)

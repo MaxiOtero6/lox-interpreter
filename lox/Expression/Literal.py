@@ -1,5 +1,5 @@
-from Expression import Expression
-from Token import LiteralType
+from lox.Expression.Expression import Expression
+from lox.Token.Token import LiteralType
 
 
 class Literal(Expression):
