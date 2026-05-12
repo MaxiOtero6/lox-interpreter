@@ -1,6 +1,237 @@
-from lox.Statement.Statement import Statement
+import lox.Expression as Expression
+import lox.Statement as Statement
+from lox.Callable import Function, ReturnException
+from lox.Environment import Environment
+from lox.Token import TokenType
 
 
-class Interpreter():
-    def interpret(self, statements: list[Statement]):
-        pass
+class Interpreter:
+    global_env: Environment
+    current_env: Environment
+    depths: dict[Expression.Variable | Expression.Assign, int]
+
+    def __init__(self):
+        self.global_env = Environment()
+        self.current_env = self.global_env
+        self.depths = {}
+
+    def interpret(self, statements: list[Statement.Statement]):
+        value = None
+        for s in statements:
+            value = self.execute(s)
+
+        return value
+
+    def set_depth(self, expression: Expression.Variable | Expression.Assign, depth: int):
+        self.depths[expression] = depth
+
+    def execute(self, statement: Statement.Statement):
+        match statement:
+            case Statement.If() as if_stmt:
+                if self.evaluate(if_stmt.condition):
+                    return self.execute(if_stmt.then_branch)
+                elif if_stmt.else_branch is not None:
+                    return self.execute(if_stmt.else_branch)
+                return
+
+            case Statement.FunctionDeclaration() as function:
+                self.current_env.define(function.name.lexeme, function)
+                return function
+
+            case Statement.While() as while_stmt:
+                while self.evaluate(while_stmt.condition):
+                    self.execute(while_stmt.body)
+                return
+
+            case Statement.Return() as return_stmt:
+                value = None
+                if return_stmt.value is not None:
+                    value = self.evaluate(return_stmt.value)
+                raise ReturnException(value)
+
+            case Statement.Print() as print_stmt:
+                value = self.evaluate(print_stmt.expression)
+                print(value)
+                return value
+
+            case Statement.Expression() as expression_stmt:
+                return self.evaluate(expression_stmt.expression)
+
+            case Statement.VariableDeclaration() as var_stmt:
+                value = None
+                if var_stmt.initializer is not None:
+                    value = self.evaluate(var_stmt.initializer)
+                self.current_env.define(var_stmt.name.lexeme, value)
+                return value
+
+            case Statement.Block() as block_stmt:
+                self.execute_block(block_stmt.statements, self.current_env)
+
+            case _:
+                raise NotImplementedError(
+                    f"Statement type {type(statement)} not implemented"
+                )
+
+    def evaluate(self, expression: Expression.Expression):
+        match expression:
+            case Expression.Postfix() as postfix:
+                if not isinstance(postfix.left, Expression.Variable):
+                    raise RuntimeError(
+                        "Postfix operator can only be applied to variables"
+                    )
+                    
+                old_value = (
+                    self.current_env.get(
+                        postfix.left.name.lexeme, self.depths[postfix.left]
+                    )
+                    if postfix.left in self.depths
+                    else self.global_env.get(postfix.left.name.lexeme)
+                )
+
+                if not isinstance(old_value, (int, float)):
+                    raise RuntimeError(f"Operand must be a number, got {type(old_value)}")
+
+                match postfix.operator.type:
+                    case TokenType.PLUS_PLUS:
+                        value = old_value + 1
+                    case TokenType.MINUS_MINUS:
+                        value = old_value - 1
+                    case _:
+                        raise NotImplementedError(
+                            f"Postfix operator {postfix.operator.type} not implemented"
+                        )
+
+                if postfix.left in self.depths:
+                    self.current_env.assign(
+                        postfix.left.name.lexeme, value, self.depths[postfix.left]
+                    )
+                else:
+                    self.global_env.assign(postfix.left.name.lexeme, value)
+
+                return old_value
+
+            case Expression.Logic() as logic:
+                left = self.evaluate(logic.left)
+
+                match logic.operator.type:
+                    case TokenType.OR:
+                        if left:
+                            return left
+                    case TokenType.AND:
+                        if not left:
+                            return left
+
+                self.evaluate(logic.right)
+
+            case Expression.Unary() as unary:
+                right = self.evaluate(unary.right)
+                match unary.operator.type:
+                    case TokenType.MINUS:
+                        if not isinstance(right, (int, float)):
+                            raise RuntimeError(
+                                f"Operand must be a number, got {type(right)}"
+                            )
+                        return -right
+                        
+                    case TokenType.NOT:
+                        return not bool(right)
+                    case _:
+                        raise NotImplementedError(
+                            f"Unary operator {unary.operator.type} not implemented"
+                        )
+
+            case Expression.Group() as group:
+                return self.evaluate(group.expression)
+
+            case Expression.Ternary() as ternary:
+                return (
+                    self.evaluate(ternary.true_expr)
+                    if self.evaluate(ternary.condition)
+                    else self.evaluate(ternary.false_expr)
+                )
+
+            case Expression.Call() as call:
+                callee = self.evaluate(call.callee)
+                arguments = [self.evaluate(arg) for arg in call.arguments]
+
+                if not isinstance(callee, Function):
+                    raise RuntimeError(f"Can only call functions, got {type(callee)}")
+
+                if len(arguments) != callee.arity():
+                    raise RuntimeError(
+                        f"Expected {callee.arity()} arguments, got {len(arguments)}"
+                    )
+
+                return callee(self, arguments)
+
+            case Expression.Binary() as binary:
+                left = self.evaluate(binary.left)
+                right = self.evaluate(binary.right)
+
+                if (left_number := isinstance(left, (int, float))) and (
+                    right_number := isinstance(right, (int, float))
+                ):
+                    match binary.operator.type:
+                        case TokenType.PLUS:
+                            return left_number + right_number
+                        case TokenType.MINUS:
+                            return left_number - right_number
+                        case TokenType.STAR:
+                            return left_number * right_number
+                        case TokenType.SLASH:
+                            return left_number / right_number
+                        case TokenType.GREATER:
+                            return left_number > right_number
+                        case TokenType.GREATER_EQUAL:
+                            return left_number >= right_number
+                        case TokenType.LESS:
+                            return left_number < right_number
+                        case TokenType.LESS_EQUAL:
+                            return left_number <= right_number
+
+                match binary.operator.type:
+                    case TokenType.EQUAL_EQUAL:
+                        return left == right
+                    case TokenType.BANG_EQUAL:
+                        return left != right
+
+                raise NotImplementedError(
+                    f"Binary operator {binary.operator.type} not implemented"
+                )
+
+            case Expression.Literal() as literal:
+                return literal.value
+
+            case Expression.Variable() as variable:
+                if variable in self.depths:
+                    return self.current_env.get(
+                        variable.name.lexeme, self.depths[variable]
+                    )
+                return self.global_env.get(variable.name.lexeme)
+
+            case Expression.Assign() as assignment:
+                value = self.evaluate(assignment.value)
+
+                if assignment in self.depths:
+                    self.current_env.assign(
+                        assignment.name.lexeme, value, self.depths[assignment]
+                    )
+                    return value
+
+                self.global_env.assign(assignment.name.lexeme, value)
+                return value
+
+            case _:
+                raise NotImplementedError(
+                    f"Expression type {type(expression)} not implemented"
+                )
+
+    def execute_block(
+        self, statements: list[Statement.Statement], environment: Environment
+    ):
+        previous_env = self.current_env
+        self.current_env = environment
+        try:
+            return self.interpret(statements)
+        finally:
+            self.current_env = previous_env
