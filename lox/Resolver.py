@@ -135,6 +135,9 @@ class Resolver():
                 return
 
             case Expression.Variable() as variable:
+                if not self.scopes:
+                    return
+                
                 info = self.scopes[-1].get(variable.name.lexeme)
                 if info is not None and not info.is_defined:
                     raise RuntimeError(
@@ -147,6 +150,9 @@ class Resolver():
 
             case Expression.Assign() as assignment:
                 value = self.resolve(assignment.value)
+
+                if not self.scopes:
+                    return value
 
                 depth = self._search_depth(assignment.name.lexeme)
                 self.interpreter.set_depth(assignment, depth)
