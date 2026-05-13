@@ -578,19 +578,17 @@ class Parser:
 
         while self._match({TokenType.LEFT_PAREN}):
             arguments = []
-            while self._look_next().type not in {TokenType.EOF, TokenType.RIGHT_PAREN}:
+            if self._look_next().type != TokenType.RIGHT_PAREN:
                 arguments.append(self._make_expression())
-                while not self._look_next().type == TokenType.EOF and self._match(
-                    {TokenType.COMMA}
-                ):
+                while self._match({TokenType.COMMA}):
                     arguments.append(self._make_expression())
-
-                return Expression.Call(expression, arguments)
 
             if not self._match({TokenType.RIGHT_PAREN}):
                 raise SyntaxError(
                     f"Expected '{TokenType.RIGHT_PAREN}' after arguments instead got '{self._look_next().type}'"
                 )
+
+            expression = Expression.Call(expression, arguments)
 
         return expression
 
