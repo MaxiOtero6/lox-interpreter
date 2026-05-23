@@ -82,24 +82,27 @@ class Lox:
             raise RuntimeError(f"Runtime error: {e}")
 
     def _run(self, source: str):
-        tokens = self._scan(source)
-        if self.mode == _LoxMode.SCAN:
-            for token in tokens:
-                print(token)
-            return
+        try:
+            tokens = self._scan(source)
+            if self.mode == _LoxMode.SCAN:
+                for token in tokens:
+                    print(token)
+                return
 
-        statements = self._parse(tokens)
-        if self.mode == _LoxMode.PARSE:
-            for statement in statements:
-                print(statement)
-            return
+            statements = self._parse(tokens)
+            if self.mode == _LoxMode.PARSE:
+                for statement in statements:
+                    print(statement)
+                return
 
-        interpreter = Interpreter()
-        self._resolve(statements, interpreter)
+            interpreter = Interpreter()
+            self._resolve(statements, interpreter)
 
-        result = self._interpret(statements, interpreter)
-        if self.args.repl and result is not None:
-            print(result)
+            result = self._interpret(statements, interpreter)
+            if self.args.repl and result is not None:
+                print(result)
+        except RuntimeError as e:
+            print(f"\033[31m{e}\033[0m")
 
     def run(self):
         if self.args.scan:
@@ -129,5 +132,3 @@ class Lox:
                 self._run(line)
             except (EOFError, KeyboardInterrupt):
                 break
-            except RuntimeError as e:
-                print(e)

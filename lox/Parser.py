@@ -631,4 +631,4 @@ class Parser:
             return Expression.Group(expression)
 
         raise SyntaxError(
-            f"Expected expression instead got '{self._look_next()}'")
+            f"Expected expression instead got '{self._look_next().type}'")
