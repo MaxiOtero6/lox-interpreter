@@ -134,6 +134,15 @@ class Resolver():
                 for argument in call.arguments:
                     self.resolve(argument)
 
+            case Expression.Function() as function:
+                self._begin_scope()
+                for param in function.params:
+                    self._declare(param.lexeme)
+                    self._define(param.lexeme)
+                for s in function.body:
+                    self.resolve(s)
+                self._end_scope()
+
             case Expression.Binary() as binary:
                 self.resolve(binary.left)
                 self.resolve(binary.right)

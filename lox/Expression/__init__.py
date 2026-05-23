@@ -10,6 +10,7 @@ from .Variable import Variable
 from .Assign import Assign
 from .Call import Call
 from .Prefix import Prefix
+from .Function import Function
 
 __all__ = [
     "Assign",
@@ -23,5 +24,6 @@ __all__ = [
     "Postfix",
     "Unary",
     "Prefix",
-    "Variable"
+    "Variable",
+    "Function"
 ]

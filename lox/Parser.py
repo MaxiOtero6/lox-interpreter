@@ -622,6 +622,39 @@ class Parser:
         if self._match({TokenType.IDENTIFIER}):
             return Expression.Variable(self._prev())
 
+        # anonymous function literal: fun (<params>) { <body> }
+        if self._match({TokenType.FUN}):
+            params: list[Token] = []
+
+            if not self._match({TokenType.LEFT_PAREN}):
+                raise SyntaxError(
+                    f"Expected '{TokenType.LEFT_PAREN}' after 'fun' instead got '{self._look_next().type}'"
+                )
+
+            while self._look_next().type not in {TokenType.EOF, TokenType.RIGHT_PAREN}:
+                if not self._match({TokenType.IDENTIFIER}):
+                    raise SyntaxError(
+                        f"Expected parameter name instead got '{self._look_next().type}'"
+                    )
+
+                params.append(self._prev())
+
+                if self._look_next().type == TokenType.COMMA:
+                    self._next()
+
+            if not self._match({TokenType.RIGHT_PAREN}):
+                raise SyntaxError(
+                    f"Expected '{TokenType.RIGHT_PAREN}' after parameters instead got '{self._look_next().type}'"
+                )
+
+            if not self._match({TokenType.LEFT_BRACE}):
+                raise SyntaxError(
+                    f"Expected '{TokenType.LEFT_BRACE}' before function body instead got '{self._look_next().type}'"
+                )
+
+            body = self._get_block()
+            return Expression.Function(params, body)
+
         if self._match({TokenType.LEFT_PAREN}):
             expression = self._make_expression()
             if not self._match({TokenType.RIGHT_PAREN}):

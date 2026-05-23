@@ -3,8 +3,10 @@ import lox.Statement as Statement
 from lox.Callable import ReturnException
 from lox.Environment import Environment
 from lox.Token import TokenType
+from lox.Token.Token import Token
 from lox.Callable.Function import Function
 import lox.Printer as Printer
+
 
 class Interpreter:
     global_env: Environment
@@ -217,6 +219,13 @@ class Interpreter:
                     )
 
                 return callee(self, arguments)
+
+            case Expression.Function() as func_expr:
+                name_token = Token(TokenType.IDENTIFIER, "<anon>", None,
+                                   func_expr.params[0].line if func_expr.params else 0)
+                func_decl = Statement.FunctionDeclaration(
+                    name_token, func_expr.params, func_expr.body)
+                return Function(func_decl, self.current_env)
 
             case Expression.Binary() as binary:
                 left = self.evaluate(binary.left)
