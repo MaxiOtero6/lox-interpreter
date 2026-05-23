@@ -54,7 +54,7 @@ class Interpreter:
             case Statement.Print() as print_stmt:
                 value = self.evaluate(print_stmt.expression)
                 print(value)
-                return value
+                return None
 
             case Statement.Expression() as expression_stmt:
                 return self.evaluate(expression_stmt.expression)
