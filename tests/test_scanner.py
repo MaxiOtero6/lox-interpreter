@@ -126,7 +126,7 @@ def test_remove_multiline_comments():
 
 
 def test_single_char_tokens():
-    tokens = Scanner().scan("(){},-+;*/%:?**")
+    tokens = Scanner().scan("(){}[],-+;*/%:?**")
     tokens_type = [token.type for token in tokens]
 
     expected_tokens_type = [
@@ -134,6 +134,8 @@ def test_single_char_tokens():
         TokenType.RIGHT_PAREN,
         TokenType.LEFT_BRACE,
         TokenType.RIGHT_BRACE,
+        TokenType.LEFT_BRACKET,
+        TokenType.RIGHT_BRACKET,
         TokenType.COMMA,
         TokenType.MINUS,
         TokenType.PLUS,

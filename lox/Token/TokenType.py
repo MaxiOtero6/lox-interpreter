@@ -21,6 +21,8 @@ class TokenType(Enum):
     RIGHT_PAREN = ')'
     LEFT_BRACE = '{'
     RIGHT_BRACE = '}'
+    LEFT_BRACKET = '['
+    RIGHT_BRACKET = ']'
     SEMICOLON = ';'
 
     # Double char tokens
