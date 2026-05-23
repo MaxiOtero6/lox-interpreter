@@ -1,6 +1,7 @@
 from lox.Expression.Expression import Expression
 from lox.Token.Token import LiteralType
-from lox.Printer import stringify
+import lox.Printer as Printer
+
 
 class Literal(Expression):
     """
@@ -11,9 +12,15 @@ class Literal(Expression):
         false
         nil
     """
-    
+
     def __init__(self, value: LiteralType):
         self.value = value
 
     def __str__(self):
-        return stringify(self.value)
+        return Printer.stringify(self.value)
+
+    def ast_label(self):
+        return "Literal"
+
+    def ast_children(self):
+        return [self.value]

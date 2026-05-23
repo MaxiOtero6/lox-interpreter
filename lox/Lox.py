@@ -1,3 +1,4 @@
+from lox.Printer import ast_to_string
 import argparse
 from enum import Enum
 
@@ -93,8 +94,7 @@ class Lox:
 
             statements = self._parse(tokens)
             if self.mode == _LoxMode.PARSE:
-                for statement in statements:
-                    print(statement)
+                print(ast_to_string(statements))
                 return
 
             interpreter = self.interpreter

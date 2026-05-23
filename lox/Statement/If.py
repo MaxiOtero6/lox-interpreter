@@ -1,6 +1,7 @@
 from lox.Statement.Statement import Statement
 from lox.Expression import Expression
 
+
 class If(Statement):
     def __init__(self, condition: Expression, then_branch: Statement, else_branch: Statement | None):
         self.condition = condition
@@ -9,3 +10,12 @@ class If(Statement):
 
     def __str__(self) -> str:
         return f"if {self.condition} then {self.then_branch}" + (f" else {self.else_branch}" if self.else_branch else "")
+
+    def ast_label(self):
+        return "If"
+
+    def ast_children(self):
+        children = [self.condition, self.then_branch]
+        if self.else_branch:
+            children.append(self.else_branch)
+        return children

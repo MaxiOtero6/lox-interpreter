@@ -1,13 +1,14 @@
 from lox.Expression.Expression import Expression
 from lox.Token.Token import Token
 
+
 class Logic(Expression):
     """
     Examples:
         left and right
         left or right
     """
-    
+
     def __init__(self, left: Expression, operator: Token, right: Expression):
         self.left = left
         self.operator = operator
@@ -15,3 +16,9 @@ class Logic(Expression):
 
     def __str__(self):
         return f"({self.left} {self.operator.type} {self.right})"
+
+    def ast_label(self):
+        return "Logic"
+
+    def ast_children(self):
+        return [self.left, self.operator, self.right]

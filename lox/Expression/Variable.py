@@ -13,3 +13,9 @@ class Variable(Expression):
 
     def __str__(self):
         return str(self.name.lexeme)
+
+    def ast_label(self):
+        return "Variable"
+
+    def ast_children(self):
+        return [self.name]

@@ -8,3 +8,9 @@ class Print(Statement):
 
     def __str__(self) -> str:
         return f"print {self.expression}"
+
+    def ast_label(self):
+        return "Print"
+
+    def ast_children(self):
+        return [self.expression]

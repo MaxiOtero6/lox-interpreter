@@ -1,6 +1,7 @@
 from lox.Expression.Expression import Expression
 from lox.Token.Token import Token
 
+
 class Postfix(Expression):
     """
     Examples:
@@ -14,3 +15,9 @@ class Postfix(Expression):
 
     def __str__(self):
         return f"({self.left}{self.operator.lexeme})"
+
+    def ast_label(self):
+        return "Postfix"
+
+    def ast_children(self):
+        return [self.left, self.operator]

@@ -14,3 +14,10 @@ class FunctionDeclaration(Statement):
             [str(statement) for statement in self.body]
         )
         return f"fun {self.name.lexeme}({params_joined}) {{\n{statements_joined}\n}}"
+
+    def ast_label(self):
+        params = ", ".join([p.lexeme for p in self.params])
+        return f"Function {self.name.lexeme}({params})"
+
+    def ast_children(self):
+        return list(self.body)

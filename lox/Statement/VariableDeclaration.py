@@ -13,3 +13,9 @@ class VariableDeclaration(Statement):
             return f"var {self.name.lexeme}"
 
         return f"var {self.name.lexeme} = {self.initializer}"
+
+    def ast_label(self):
+        return f"VarDecl {self.name.lexeme}"
+
+    def ast_children(self):
+        return [self.initializer] if self.initializer is not None else []

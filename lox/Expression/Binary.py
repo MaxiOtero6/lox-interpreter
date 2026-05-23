@@ -12,7 +12,7 @@ class Binary(Expression):
         left / right
         left % right
     """
-    
+
     def __init__(self, left: Expression, operator: Token, right: Expression):
         self.left = left
         self.operator = operator
@@ -20,3 +20,9 @@ class Binary(Expression):
 
     def __str__(self):
         return f"({self.left} {self.operator} {self.right})"
+
+    def ast_label(self):
+        return "Binary"
+
+    def ast_children(self):
+        return [self.left, self.operator, self.right]

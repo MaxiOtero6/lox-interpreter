@@ -15,3 +15,9 @@ class Prefix(Expression):
 
     def __str__(self):
         return f"({self.operator.lexeme}{self.right})"
+
+    def ast_label(self):
+        return "Prefix"
+
+    def ast_children(self):
+        return [self.operator, self.right]

@@ -8,10 +8,16 @@ class Unary(Expression):
         -right
         !right
     """
-    
+
     def __init__(self, operator: Token, right: Expression):
         self.operator = operator
         self.right = right
 
     def __str__(self):
         return f"({self.operator.lexeme}{self.right})"
+
+    def ast_label(self):
+        return "Unary"
+
+    def ast_children(self):
+        return [self.operator, self.right]
