@@ -13,7 +13,7 @@ from lox.Resolver import Resolver
 from lox.Scanner import Scanner
 from lox.Statement.Statement import Statement
 from lox.Token.Token import Token
-
+from lox.utils import stringify
 
 class _LoxMode(Enum):
     SCAN = 1
@@ -103,7 +103,7 @@ class Lox:
 
             result = self._interpret(statements, interpreter)
             if self.args.repl and result is not None:
-                print(Printer.stringify(result))
+                print(stringify(result))
         except RuntimeError as e:
             print(f"\033[31m{e}\033[0m")
 

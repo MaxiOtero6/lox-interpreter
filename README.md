@@ -8,6 +8,10 @@ Lox language interpreter coded in python
 uv venv && uv sync
 source .venv/bin/activate
 python3 lox <<file>>
+
+# Run tests
+uv pip install -e .
+pytest
 ```
 
 ## Flags

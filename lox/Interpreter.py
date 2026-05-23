@@ -5,7 +5,7 @@ from lox.Environment import Environment
 from lox.Token import TokenType
 from lox.Token.Token import Token
 from lox.Callable.Function import Function
-import lox.Printer as Printer
+from lox.utils import stringify
 
 
 class Interpreter:
@@ -55,7 +55,7 @@ class Interpreter:
 
             case Statement.Print() as print_stmt:
                 value = self.evaluate(print_stmt.expression)
-                print(Printer.stringify(value))
+                print(stringify(value))
                 return None
 
             case Statement.Expression() as expression_stmt:

@@ -1,6 +1,7 @@
 from typing import List
 
 from lox.Statement import Statement
+from lox.utils import stringify
 
 # ANSI color codes
 RESET = "\033[0m"
@@ -9,15 +10,6 @@ CYAN = "\033[36m"
 YELLOW = "\033[33m"
 GREEN = "\033[32m"
 MAGENTA = "\033[35m"
-
-
-def stringify(value: object) -> str:
-    """Golden rule"""
-    if value is None:
-        return "nil"
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    return str(value)
 
 
 def ast_to_string(statements: List[Statement]) -> str:
