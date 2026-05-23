@@ -13,4 +13,4 @@ class Postfix(Expression):
         self.left = left
 
     def __str__(self):
-        return f"({self.left}{self.operator})"
+        return f"({self.left}{self.operator.lexeme})"

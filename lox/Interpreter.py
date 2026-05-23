@@ -4,7 +4,7 @@ from lox.Callable import ReturnException
 from lox.Environment import Environment
 from lox.Token import TokenType
 from lox.Callable.Function import Function
-
+from lox import Printer
 
 class Interpreter:
     global_env: Environment
@@ -53,7 +53,7 @@ class Interpreter:
 
             case Statement.Print() as print_stmt:
                 value = self.evaluate(print_stmt.expression)
-                print(value)
+                print(Printer.stringify(value))
                 return None
 
             case Statement.Expression() as expression_stmt:
@@ -209,7 +209,7 @@ class Interpreter:
 
                 if not isinstance(callee, Function):
                     raise RuntimeError(
-                        f"Can only call functions, got {type(callee)}")
+                        f"Can only call functions, got '{str(callee)}'")
 
                 if len(arguments) != callee.arity():
                     raise RuntimeError(

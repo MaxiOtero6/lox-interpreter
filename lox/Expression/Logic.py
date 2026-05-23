@@ -14,4 +14,4 @@ class Logic(Expression):
         self.right = right
 
     def __str__(self):
-        return f"({self.left} {self.operator} {self.right})"
+        return f"({self.left} {self.operator.type} {self.right})"

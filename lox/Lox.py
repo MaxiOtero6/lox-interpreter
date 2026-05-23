@@ -6,6 +6,7 @@ try:
 except Exception:
     PromptSession = None
 
+from lox import Printer
 from lox.Interpreter import Interpreter
 from lox.Parser import Parser
 from lox.Resolver import Resolver
@@ -26,6 +27,7 @@ class Lox:
         self.session = PromptSession() if PromptSession is not None else None
         self.args = self._get_args()
         self.mode = _LoxMode.FULL
+        self.interpreter = Interpreter()
 
     def _get_args(self):
         parser = argparse.ArgumentParser(
@@ -95,12 +97,15 @@ class Lox:
                     print(statement)
                 return
 
-            interpreter = Interpreter()
+            interpreter = self.interpreter
             self._resolve(statements, interpreter)
 
             result = self._interpret(statements, interpreter)
             if self.args.repl and result is not None:
-                print(result)
+                try:
+                    print(Printer.stringify(result))
+                except Exception:
+                    print(result)
         except RuntimeError as e:
             print(f"\033[31m{e}\033[0m")
 

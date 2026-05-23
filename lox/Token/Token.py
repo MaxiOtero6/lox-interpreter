@@ -1,5 +1,5 @@
 from lox.Token.TokenType import TokenType
-
+from lox.Printer import stringify
 
 LiteralType = str | float | bool | None
 
@@ -28,4 +28,4 @@ class Token():
         self.line = line
 
     def __str__(self):
-        return f"{self.type} {self.lexeme} {self.literal}"
+        return f"{self.type} {self.lexeme} {stringify(self.literal)}"

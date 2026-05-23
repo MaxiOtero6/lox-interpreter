@@ -1,6 +1,6 @@
 from lox.Expression.Expression import Expression
 from lox.Token.Token import LiteralType
-
+from lox.Printer import stringify
 
 class Literal(Expression):
     """
@@ -16,4 +16,4 @@ class Literal(Expression):
         self.value = value
 
     def __str__(self):
-        return str(self.value)
+        return stringify(self.value)

@@ -14,4 +14,4 @@ class Unary(Expression):
         self.right = right
 
     def __str__(self):
-        return f"({self.operator}{self.right})"
+        return f"({self.operator.lexeme}{self.right})"
