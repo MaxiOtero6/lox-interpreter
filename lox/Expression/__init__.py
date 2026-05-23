@@ -9,6 +9,7 @@ from .Unary import Unary
 from .Variable import Variable
 from .Assign import Assign
 from .Call import Call
+from .Prefix import Prefix
 
 __all__ = [
     "Assign",
@@ -21,5 +22,6 @@ __all__ = [
     "Logic",
     "Postfix",
     "Unary",
+    "Prefix",
     "Variable"
 ]

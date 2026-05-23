@@ -1,7 +1,10 @@
 import argparse
 from enum import Enum
 
-from prompt_toolkit import PromptSession
+try:
+    from prompt_toolkit import PromptSession
+except Exception:
+    PromptSession = None
 
 from lox.Interpreter import Interpreter
 from lox.Parser import Parser
@@ -20,12 +23,13 @@ class _LoxMode(Enum):
 
 class Lox:
     def __init__(self):
-        self.session = PromptSession()
+        self.session = PromptSession() if PromptSession is not None else None
         self.args = self._get_args()
         self.mode = _LoxMode.FULL
 
     def _get_args(self):
-        parser = argparse.ArgumentParser(prog="lox", description="Lox Interpreter")
+        parser = argparse.ArgumentParser(
+            prog="lox", description="Lox Interpreter")
 
         parser.add_argument(
             "--scan", action="store_true", help="Run the scanner and print the tokens"
@@ -40,6 +44,9 @@ class Lox:
         )
         parser.add_argument(
             "file", nargs="?", help="Lox source file to execute instead of REPL"
+        )
+        parser.add_argument(
+            "--line-by-line", action="store_true", help="Run in line-by-line mode"
         )
 
         args = parser.parse_args()
@@ -89,7 +96,7 @@ class Lox:
 
         interpreter = Interpreter()
         self._resolve(statements, interpreter)
-        
+
         result = self._interpret(statements, interpreter)
         if self.args.repl and result is not None:
             print(result)
@@ -104,13 +111,21 @@ class Lox:
 
         if self.args.file:
             with open(self.args.file, "r") as f:
-                file: str = f.read()
-                self._run(file)
+                if self.args.line_by_line:
+                    for line in f:
+                        print(f"> {line.strip()}")
+                        self._run(line)
+                else:
+                    file: str = f.read()
+                    self._run(file)
             return
 
         while True:
             try:
-                line = str(self.session.prompt(">>> "))
+                if self.session is not None:
+                    line = str(self.session.prompt(">>> "))
+                else:
+                    line = input(">>> ")
                 self._run(line)
             except (EOFError, KeyboardInterrupt):
                 break

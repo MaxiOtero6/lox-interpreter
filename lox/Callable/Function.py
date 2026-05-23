@@ -4,7 +4,7 @@ from lox.Environment import Environment
 from lox.Statement.FunctionDeclaration import FunctionDeclaration
 from lox.Statement.Statement import Statement
 
-from . import ReturnException
+from .ReturnException import ReturnException
 
 if TYPE_CHECKING:
     from lox.Interpreter import Interpreter

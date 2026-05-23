@@ -20,7 +20,7 @@ class Environment:
             environment = environment.enclosing
         return environment
 
-    def get(self, name: str, depth: int = 0) -> object:
+    def get(self, name: str, depth: Optional[int] = None) -> object:
         if depth is not None:
             return self.ancestor(depth).get(name)
 
@@ -29,7 +29,7 @@ class Environment:
         
         raise RuntimeError(f"Undefined variable '{name}'.")
 
-    def assign(self, name: str, value: object, depth: int = 0) -> object:
+    def assign(self, name: str, value: object, depth: Optional[int] = None) -> object:
         if depth is not None:
             return self.ancestor(depth).assign(name, value)
 

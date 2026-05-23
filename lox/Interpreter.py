@@ -1,8 +1,9 @@
 import lox.Expression as Expression
 import lox.Statement as Statement
-from lox.Callable import Function, ReturnException
+from lox.Callable import ReturnException
 from lox.Environment import Environment
 from lox.Token import TokenType
+from lox.Callable.Function import Function
 
 
 class Interpreter:
@@ -35,8 +36,9 @@ class Interpreter:
                 return
 
             case Statement.FunctionDeclaration() as function:
-                self.current_env.define(function.name.lexeme, function)
-                return function
+                func_obj = Function(function, self.current_env)
+                self.current_env.define(function.name.lexeme, func_obj)
+                return None
 
             case Statement.While() as while_stmt:
                 while self.evaluate(while_stmt.condition):
@@ -65,7 +67,8 @@ class Interpreter:
                 return value
 
             case Statement.Block() as block_stmt:
-                self.execute_block(block_stmt.statements, self.current_env)
+                self.execute_block(block_stmt.statements,
+                                   Environment(self.current_env))
 
             case _:
                 raise NotImplementedError(
@@ -111,6 +114,55 @@ class Interpreter:
 
                 return old_value
 
+            case Expression.Prefix() as prefix:
+                # Variable: modify in place and return new value
+                if isinstance(prefix.right, Expression.Variable):
+                    var = prefix.right
+                    old_value = (
+                        self.current_env.get(var.name.lexeme, self.depths[var])
+                        if var in self.depths
+                        else self.global_env.get(var.name.lexeme)
+                    )
+
+                    if not isinstance(old_value, (int, float)):
+                        raise RuntimeError(
+                            f"Operand must be a number, got {type(old_value)}"
+                        )
+
+                    match prefix.operator.type:
+                        case TokenType.PLUS_PLUS:
+                            value = old_value + 1
+                        case TokenType.MINUS_MINUS:
+                            value = old_value - 1
+                        case _:
+                            raise NotImplementedError(
+                                f"Prefix operator {prefix.operator.type} not implemented"
+                            )
+
+                    if var in self.depths:
+                        self.current_env.assign(
+                            var.name.lexeme, value, self.depths[var])
+                    else:
+                        self.global_env.assign(var.name.lexeme, value)
+
+                    return value
+
+                # Non-variable: evaluate right side and compute increment/decrement
+                right_val = self.evaluate(prefix.right)
+                if not isinstance(right_val, (int, float)):
+                    raise RuntimeError(
+                        f"Operand must be a number, got {type(right_val)}")
+
+                match prefix.operator.type:
+                    case TokenType.PLUS_PLUS:
+                        return right_val + 1
+                    case TokenType.MINUS_MINUS:
+                        return right_val - 1
+                    case _:
+                        raise NotImplementedError(
+                            f"Prefix operator {prefix.operator.type} not implemented"
+                        )
+
             case Expression.Logic() as logic:
                 left = self.evaluate(logic.left)
 
@@ -122,7 +174,7 @@ class Interpreter:
                         if not left:
                             return left
 
-                self.evaluate(logic.right)
+                return self.evaluate(logic.right)
 
             case Expression.Unary() as unary:
                 right = self.evaluate(unary.right)
@@ -180,6 +232,10 @@ class Interpreter:
                             return left * right
                         case TokenType.SLASH:
                             return left / right
+                        case TokenType.PERCENT:
+                            return left % right
+                        case TokenType.STAR_STAR:
+                            return left ** right
                         case TokenType.GREATER:
                             return left > right
                         case TokenType.GREATER_EQUAL:
@@ -189,12 +245,18 @@ class Interpreter:
                         case TokenType.LESS_EQUAL:
                             return left <= right
 
+                if isinstance(left, str) and isinstance(right, str) and binary.operator.type == TokenType.PLUS:
+                    return left + right
+
                 match binary.operator.type:
                     case TokenType.EQUAL_EQUAL:
                         return left == right
                     case TokenType.BANG_EQUAL:
                         return left != right
 
+                if binary.operator.type == TokenType.PLUS:
+                    raise RuntimeError(
+                        "Operands of + must be either numbers or strings")
                 raise NotImplementedError(
                     f"Binary operator {binary.operator.type} not implemented"
                 )

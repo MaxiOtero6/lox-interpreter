@@ -61,6 +61,23 @@ class Scanner():
                 if self._match("/"):
                     while self._peek() != "\n" and not self._is_at_end():
                         self._advance()
+                elif self._match("*"):
+                    level = 1
+                    while level > 0 and not self._is_at_end():
+                        if self._peek() == "/" and self._peek_next() == "*":
+                            level += 1
+                            self._advance()
+                            self._advance()
+                        elif self._peek() == "*" and self._peek_next() == "/":
+                            level -= 1
+                            self._advance()
+                            self._advance()
+                        else:
+                            if self._peek() == "\n":
+                                self.line += 1
+                            self._advance()
+                    if level > 0:
+                        raise RuntimeError(f"Unterminated multi-line comment at line {self.line}")
                 else:
                     self._add_token(TokenType.SLASH)
 

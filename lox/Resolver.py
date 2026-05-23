@@ -3,33 +3,37 @@ import lox.Expression as Expression
 from lox.Interpreter import Interpreter
 import lox.Statement as Statement
 
+
 class VariableInfo:
     def __init__(self, is_defined: bool, is_used: bool):
         self.is_defined = is_defined
         self.is_used = is_used
 
+
 class Scope:
     def __init__(self):
         self.variables: dict[str, VariableInfo] = {}
-    
+
     def define(self, name: str):
         self.variables[name] = VariableInfo(is_defined=True, is_used=False)
 
     def declare(self, name: str):
         if name in self.variables:
-            raise RuntimeError(f"Variable '{name}' is already declared in this scope.")
-            
+            raise RuntimeError(
+                f"Variable '{name}' is already declared in this scope.")
+
         self.variables[name] = VariableInfo(is_defined=False, is_used=False)
-    
+
     def use(self, name: str):
         if name in self.variables:
             self.variables[name].is_used = True
         else:
-            raise RuntimeError(f"Variable '{name}' is not defined in this scope.")
-        
+            raise RuntimeError(
+                f"Variable '{name}' is not defined in this scope.")
+
     def is_defined(self, name: str) -> bool:
         return name in self.variables and self.variables[name].is_defined
-    
+
     def is_used(self, name: str) -> bool:
         return name in self.variables and self.variables[name].is_used
 
@@ -38,7 +42,7 @@ class Scope:
             return self.variables[name]
 
         return None
-        
+
 
 class Resolver():
     def __init__(self, interpreter: Interpreter) -> None:
@@ -107,6 +111,9 @@ class Resolver():
             case Expression.Postfix() as postfix:
                 self.resolve(postfix.left)
 
+            case Expression.Prefix() as prefix:
+                self.resolve(prefix.right)
+
             case Expression.Logic() as logic:
                 self.resolve(logic.left)
                 self.resolve(logic.right)
@@ -123,9 +130,9 @@ class Resolver():
                 self.resolve(ternary.false_expr)
 
             case Expression.Call() as call:
-               self.resolve(call.callee)
-               for argument in call.arguments:
-                   self.resolve(argument)  
+                self.resolve(call.callee)
+                for argument in call.arguments:
+                    self.resolve(argument)
 
             case Expression.Binary() as binary:
                 self.resolve(binary.left)
@@ -137,7 +144,7 @@ class Resolver():
             case Expression.Variable() as variable:
                 if not self.scopes:
                     return
-                
+
                 info = self.scopes[-1].get(variable.name.lexeme)
                 if info is not None and not info.is_defined:
                     raise RuntimeError(
@@ -145,8 +152,12 @@ class Resolver():
                     )
 
                 depth = self._search_depth(variable.name.lexeme)
-                self.interpreter.set_depth(variable, depth)
-                self.scopes[-1].use(variable.name.lexeme)
+                if depth is not None:
+                    self.interpreter.set_depth(variable, depth)
+                    for i in range(len(self.scopes) - 1, -1, -1):
+                        if self.scopes[i].is_defined(variable.name.lexeme):
+                            self.scopes[i].use(variable.name.lexeme)
+                            break
 
             case Expression.Assign() as assignment:
                 value = self.resolve(assignment.value)
@@ -155,7 +166,8 @@ class Resolver():
                     return value
 
                 depth = self._search_depth(assignment.name.lexeme)
-                self.interpreter.set_depth(assignment, depth)
+                if depth is not None:
+                    self.interpreter.set_depth(assignment, depth)
 
                 return value
 
@@ -173,18 +185,17 @@ class Resolver():
     def _declare(self, name: str):
         if not self.scopes:
             return
-            
+
         self.scopes[-1].declare(name)
 
     def _define(self, name: str):
         if not self.scopes:
             return
-            
+
         self.scopes[-1].define(name)
 
-    def _search_depth(self, name: str) -> int:
+    def _search_depth(self, name: str) -> int | None:
         for i in range(len(self.scopes) - 1, -1, -1):
             if self.scopes[i].is_defined(name):
                 return len(self.scopes) - 1 - i
-
-        raise RuntimeError(f"Undefined variable '{name}'.")
+        return None

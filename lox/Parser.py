@@ -505,13 +505,13 @@ class Parser:
             <left> % <right>
         """
 
-        expression = self._make_unary_expression()
+        expression = self._make_exponent_expression()
 
         while not self._look_next().type == TokenType.EOF and self._match(
             {TokenType.STAR, TokenType.SLASH, TokenType.PERCENT}
         ):
             operator = self._prev()
-            right = self._make_unary_expression()
+            right = self._make_exponent_expression()
             expression = Expression.Binary(expression, operator, right)
 
         return expression
@@ -533,17 +533,7 @@ class Parser:
         if self._match({TokenType.PLUS_PLUS, TokenType.MINUS_MINUS}):
             operator = self._prev()
             expression = self._make_unary_expression()
-
-            if not isinstance(expression, Expression.Variable):
-                raise SyntaxError(
-                    f"Expected variable after prefix operator instead got '{expression}'"
-                )
-
-            # TODO: checkear que funcione con var--
-            return Expression.Assign(
-                expression.name,
-                Expression.Binary(expression, operator, Expression.Literal(1)),
-            )
+            return Expression.Prefix(operator, expression)
 
         return self._make_postfix_expression()
 
@@ -565,6 +555,21 @@ class Parser:
                 )
 
             expression = Expression.Postfix(operator, expression)
+
+        return expression
+
+    def _make_exponent_expression(self) -> Expression.Expression:
+        """
+        Parses the exponentiation expression (right-associative):
+            <base> ** <exponent>
+        """
+
+        expression = self._make_unary_expression()
+
+        if self._match({TokenType.STAR_STAR}):
+            operator = self._prev()
+            right = self._make_exponent_expression()
+            expression = Expression.Binary(expression, operator, right)
 
         return expression
 
