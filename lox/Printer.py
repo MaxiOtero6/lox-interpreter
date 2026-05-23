@@ -65,6 +65,44 @@ def format_resolver_depths(depths: dict, color: bool = True) -> str:
     return "\n".join(lines)
 
 
+def format_tokens(tokens: list, color: bool = True) -> str:
+    lines: List[str] = []
+    header = _color("Tokens:", CYAN) if color else "Tokens:"
+    lines.append(header)
+
+    if not tokens:
+        empty = _color("  (no tokens)", MAGENTA) if color else "  (no tokens)"
+        lines.append(empty)
+        return "\n".join(lines)
+
+    lexemes = [t.lexeme for t in tokens if hasattr(t, "lexeme")]
+    lex_w = max((len(l) for l in lexemes), default=6)
+
+    for i, t in enumerate(tokens, start=1):
+        line_no = getattr(t, "line", "?")
+        lex = t.lexeme if hasattr(t, "lexeme") else str(t)
+        typ = t.type.name if hasattr(t, "type") and hasattr(
+            t.type, "name") else str(getattr(t, "type", ""))
+        lit = getattr(t, "literal", None)
+
+        if color:
+            lex_fmt = _color(lex, YELLOW)
+            typ_fmt = _color(typ, CYAN)
+            lit_fmt = _fmt_literal(
+                lit) if lit is not None else _color("nil", MAGENTA)
+        else:
+            lex_fmt = lex
+            typ_fmt = typ
+            lit_fmt = stringify(lit)
+
+        row = f"  {i:>3}. [Line {line_no}] {lex_fmt:<{lex_w}} | {typ_fmt}"
+        if lit is not None:
+            row += f" = {lit_fmt}"
+        lines.append(row)
+
+    return "\n".join(lines)
+
+
 def _node_tree_lines(node, prefix: str, is_last: bool, is_root: bool = False) -> List[str]:
     connector = "" if is_root and prefix == "" else (
         "└── " if is_last else "├── ")
