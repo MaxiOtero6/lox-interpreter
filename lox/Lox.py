@@ -4,7 +4,7 @@ from enum import Enum
 
 try:
     from prompt_toolkit import PromptSession
-except Exception:
+except ImportError:
     PromptSession = None
 
 from lox import Printer
@@ -99,13 +99,13 @@ class Lox:
 
             interpreter = self.interpreter
             self._resolve(statements, interpreter)
+            if self.mode == _LoxMode.RESOLVE:
+                print(Printer.format_resolver_depths(interpreter.depths))
+                return
 
             result = self._interpret(statements, interpreter)
             if self.args.repl and result is not None:
-                try:
-                    print(Printer.stringify(result))
-                except Exception:
-                    print(result)
+                print(Printer.stringify(result))
         except RuntimeError as e:
             print(f"\033[31m{e}\033[0m")
 

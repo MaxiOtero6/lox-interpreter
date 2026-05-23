@@ -4,7 +4,7 @@ from lox.Callable import ReturnException
 from lox.Environment import Environment
 from lox.Token import TokenType
 from lox.Callable.Function import Function
-from lox import Printer
+import lox.Printer as Printer
 
 class Interpreter:
     global_env: Environment
