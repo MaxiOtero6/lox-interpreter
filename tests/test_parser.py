@@ -2,7 +2,10 @@ import pytest
 from lox.Expression import (
     Binary,
     Group,
+    IndexGet,
+    IndexSet,
     Literal,
+    ListLiteral,
     Prefix,
     Unary,
     Assign,
@@ -61,6 +64,83 @@ def test_literals():
     expr = Parser(tokens)._make_expression()
     assert isinstance(expr, Literal)
     assert expr.value is None
+
+
+def test_list_literals():
+    tokens = Scanner().scan("[]")
+    expr = Parser(tokens)._make_expression()
+    assert isinstance(expr, ListLiteral)
+    assert expr.elements == []
+
+    tokens = Scanner().scan("[1, 2 + 3, \"hello\"]")
+    expr = Parser(tokens)._make_expression()
+    assert isinstance(expr, ListLiteral)
+    assert len(expr.elements) == 3
+    assert isinstance(expr.elements[0], Literal)
+    assert expr.elements[0].value == 1.0
+    assert isinstance(expr.elements[1], Binary)
+    assert isinstance(expr.elements[2], Literal)
+    assert expr.elements[2].value == "hello"
+
+    tokens = Scanner().scan("[1, 2")
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens)._make_expression()
+    assert "TokenType.RIGHT_BRACKET" in str(excinfo.value)
+
+
+def test_index_get():
+    tokens = Scanner().scan("xs[0]")
+    expr = Parser(tokens)._make_expression()
+    assert isinstance(expr, IndexGet)
+    assert isinstance(expr.collection, Variable)
+    assert expr.collection.name.lexeme == "xs"
+    assert isinstance(expr.index, Literal)
+    assert expr.index.value == 0.0
+
+    tokens = Scanner().scan("[1, 2][0]")
+    expr = Parser(tokens)._make_expression()
+    assert isinstance(expr, IndexGet)
+    assert isinstance(expr.collection, ListLiteral)
+    assert isinstance(expr.index, Literal)
+    assert expr.index.value == 0.0
+
+    tokens = Scanner().scan("matrix[0][1]")
+    expr = Parser(tokens)._make_expression()
+    assert isinstance(expr, IndexGet)
+    assert isinstance(expr.collection, IndexGet)
+    assert isinstance(expr.index, Literal)
+    assert expr.index.value == 1.0
+
+    tokens = Scanner().scan("xs[0")
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens)._make_expression()
+    assert "TokenType.RIGHT_BRACKET" in str(excinfo.value)
+
+
+def test_index_set():
+    tokens = Scanner().scan("xs[0] = 99")
+    expr = Parser(tokens)._make_expression()
+    assert isinstance(expr, IndexSet)
+    assert isinstance(expr.collection, Variable)
+    assert expr.collection.name.lexeme == "xs"
+    assert isinstance(expr.index, Literal)
+    assert expr.index.value == 0.0
+    assert isinstance(expr.value, Literal)
+    assert expr.value.value == 99.0
+
+    tokens = Scanner().scan("matrix[0][1] = 7")
+    expr = Parser(tokens)._make_expression()
+    assert isinstance(expr, IndexSet)
+    assert isinstance(expr.collection, IndexGet)
+    assert isinstance(expr.index, Literal)
+    assert expr.index.value == 1.0
+    assert isinstance(expr.value, Literal)
+    assert expr.value.value == 7.0
+
+    tokens = Scanner().scan("(xs + 1) = 99")
+    with pytest.raises(Exception) as excinfo:
+        Parser(tokens)._make_expression()
+    assert "Expected assignment target" in str(excinfo.value)
 
 
 def test_groupings():
@@ -267,12 +347,12 @@ def test_assignment():
     tokens = Scanner().scan("(x) = 5;")
     with pytest.raises(Exception) as excinfo:
         Parser(tokens).parse()
-    assert "Expected variable on left side of assignment" in str(excinfo.value)
+    assert "Expected assignment target" in str(excinfo.value)
 
     tokens = Scanner().scan("a + b = 5;")
     with pytest.raises(Exception) as excinfo:
         Parser(tokens).parse()
-    assert "Expected variable on left side of assignment" in str(excinfo.value)
+    assert "Expected assignment target" in str(excinfo.value)
 
 
 def test_function_decl_and_return():

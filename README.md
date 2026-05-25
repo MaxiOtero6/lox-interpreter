@@ -32,5 +32,5 @@ A detailed description of the syntax of the language can be found in the [lox sp
 - Power operator `**`: exponentiation (right-associative) — not in the original Lox spec.
 - Increment/decrement: `++` and `--` supported as both prefix and postfix on variables.
 - Ternary operator: conditional expressions using `? :`.
+- Arrays: mutable list literals with indexing and indexed assignment, e.g. `[1, 2, 3]`, `xs[0]`, `xs[1] = 99`.
 - Nested / multi-line comments: `/* ... */` with nesting support.
-

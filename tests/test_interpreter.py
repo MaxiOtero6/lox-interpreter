@@ -2,6 +2,17 @@ import pytest
 from lox.Interpreter import Interpreter
 from lox.Scanner import Scanner
 from lox.Parser import Parser
+from lox.Resolver import Resolver
+
+
+def run_source(source: str):
+    tokens = Scanner().scan(source)
+    statements = Parser(tokens).parse()
+    interpreter = Interpreter()
+    resolver = Resolver(interpreter)
+    for statement in statements:
+        resolver.resolve(statement)
+    return interpreter.interpret(statements)
 
 
 def test_hello_world():
@@ -130,3 +141,44 @@ def test_ternary():
         expr = Parser(tokens)._make_expression()
         value = Interpreter().evaluate(expr)
         assert value == expected
+
+
+def test_list_literals_and_indexing():
+    tokens = Scanner().scan("[1, 2 + 3, \"hello\"]")
+    expr = Parser(tokens)._make_expression()
+    value = Interpreter().evaluate(expr)
+    assert value == [1.0, 5.0, "hello"]
+
+    tokens = Scanner().scan("[1, 2 + 3, \"hello\"][1]")
+    expr = Parser(tokens)._make_expression()
+    value = Interpreter().evaluate(expr)
+    assert value == 5.0
+
+    tokens = Scanner().scan('"hello"[1]')
+    expr = Parser(tokens)._make_expression()
+    value = Interpreter().evaluate(expr)
+    assert value == "e"
+
+
+def test_index_assignment():
+    value = run_source("""
+        var xs = [1, 2, 3];
+        xs[1] = xs[0] + xs[2];
+        xs;
+    """)
+    assert value == [1.0, 4.0, 3.0]
+
+
+def test_index_errors():
+    cases = [
+        ("[1][true]", "Index must be a number"),
+        ("[1][0.5]", "Index must be an integer"),
+        ("[1][2]", "out of bounds"),
+        ("123[0]", "Can only index lists and strings"),
+        ('"hello"[0] = "H"', "Cannot assign to string index"),
+    ]
+
+    for source, expected_error in cases:
+        with pytest.raises(RuntimeError) as excinfo:
+            run_source(source + ";")
+        assert expected_error in str(excinfo.value)
