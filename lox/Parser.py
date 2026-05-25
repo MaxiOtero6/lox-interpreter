@@ -366,6 +366,7 @@ class Parser:
         """
         Parses an assignment expression.
             <variable> = <expression>
+            <collection>[<index>] = <expression>
         """
 
         expression = self._make_ternary_expression()
@@ -373,13 +374,20 @@ class Parser:
         if not self._match({TokenType.EQUAL}):
             return expression
 
-        if not isinstance(expression, Expression.Variable):
-            raise SyntaxError(
-                f"Expected variable on left side of assignment instead got '{expression}'"
+        value = self._make_expression()
+        if isinstance(expression, Expression.Variable):
+            return Expression.Assign(expression.name, value)
+
+        if isinstance(expression, Expression.IndexGet):
+            return Expression.IndexSet(
+                expression.collection,
+                expression.index,
+                value,
             )
 
-        value = self._make_expression()
-        return Expression.Assign(expression.name, value)
+        raise SyntaxError(
+            f"Expected assignment target instead got '{expression}'"
+        )
 
     def _make_ternary_expression(self) -> Expression.Expression:
         """
@@ -575,25 +583,40 @@ class Parser:
 
     def _make_call_expression(self) -> Expression.Expression:
         """
-        Parses a call expression.
+        Parses call and index expressions.
             <callee>(<arguments>)
+            <collection>[<index>]
         """
 
         expression = self._make_primary_expression()
 
-        while self._match({TokenType.LEFT_PAREN}):
-            arguments = []
-            if self._look_next().type != TokenType.RIGHT_PAREN:
-                arguments.append(self._make_expression())
-                while self._match({TokenType.COMMA}):
+        while True:
+            if self._match({TokenType.LEFT_PAREN}):
+                arguments = []
+                if self._look_next().type != TokenType.RIGHT_PAREN:
                     arguments.append(self._make_expression())
+                    while self._match({TokenType.COMMA}):
+                        arguments.append(self._make_expression())
 
-            if not self._match({TokenType.RIGHT_PAREN}):
-                raise SyntaxError(
-                    f"Expected '{TokenType.RIGHT_PAREN}' after arguments instead got '{self._look_next().type}'"
-                )
+                if not self._match({TokenType.RIGHT_PAREN}):
+                    raise SyntaxError(
+                        f"Expected '{TokenType.RIGHT_PAREN}' after arguments instead got '{self._look_next().type}'"
+                    )
 
-            expression = Expression.Call(expression, arguments)
+                expression = Expression.Call(expression, arguments)
+                continue
+
+            if self._match({TokenType.LEFT_BRACKET}):
+                index = self._make_expression()
+                if not self._match({TokenType.RIGHT_BRACKET}):
+                    raise SyntaxError(
+                        f"Expected '{TokenType.RIGHT_BRACKET}' after index expression instead got '{self._look_next().type}'"
+                    )
+
+                expression = Expression.IndexGet(expression, index)
+                continue
+
+            break
 
         return expression
 
@@ -606,6 +629,7 @@ class Parser:
             <number>
             <string>
             <identifier>
+            [<expression>, ...]
             (<expression>)
         """
 
@@ -621,6 +645,20 @@ class Parser:
 
         if self._match({TokenType.IDENTIFIER}):
             return Expression.Variable(self._prev())
+
+        if self._match({TokenType.LEFT_BRACKET}):
+            elements = []
+            if self._look_next().type != TokenType.RIGHT_BRACKET:
+                elements.append(self._make_expression())
+                while self._match({TokenType.COMMA}):
+                    elements.append(self._make_expression())
+
+            if not self._match({TokenType.RIGHT_BRACKET}):
+                raise SyntaxError(
+                    f"Expected '{TokenType.RIGHT_BRACKET}' after list elements instead got '{self._look_next().type}'"
+                )
+
+            return Expression.ListLiteral(elements)
 
         # anonymous function literal: fun (<params>) { <body> }
         if self._match({TokenType.FUN}):

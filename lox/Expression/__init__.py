@@ -11,12 +11,17 @@ from .Assign import Assign
 from .Call import Call
 from .Prefix import Prefix
 from .Function import Function
+from .IndexGet import IndexGet
+from .IndexSet import IndexSet
+from .ListLiteral import ListLiteral
 
 __all__ = [
     "Assign",
     "Binary",
     "Call",
     "Expression",
+    "IndexGet",
+    "IndexSet",
     "Literal",
     "Ternary",
     "Group",
@@ -25,5 +30,6 @@ __all__ = [
     "Unary",
     "Prefix",
     "Variable",
-    "Function"
+    "Function",
+    "ListLiteral"
 ]
