@@ -9,4 +9,6 @@ def stringify(value: Any) -> str:
         return "nil"
     if isinstance(value, bool):
         return "true" if value else "false"
+    if isinstance(value, list):
+        return f"[{', '.join(stringify(element) for element in value)}]"
     return str(value)

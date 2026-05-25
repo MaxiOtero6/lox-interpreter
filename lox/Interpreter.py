@@ -270,6 +270,29 @@ class Interpreter:
                     f"Binary operator {binary.operator.type} not implemented"
                 )
 
+            case Expression.ListLiteral() as list_literal:
+                return [self.evaluate(element) for element in list_literal.elements]
+
+            case Expression.IndexGet() as index_get:
+                collection = self.evaluate(index_get.collection)
+                index = self._normalize_index(self.evaluate(index_get.index))
+                self._check_indexable(collection)
+                self._check_index_bounds(collection, index)
+                return collection[index]
+
+            case Expression.IndexSet() as index_set:
+                collection = self.evaluate(index_set.collection)
+                index = self._normalize_index(self.evaluate(index_set.index))
+                self._check_indexable(collection)
+
+                if isinstance(collection, str):
+                    raise RuntimeError("Cannot assign to string index")
+
+                self._check_index_bounds(collection, index)
+                value = self.evaluate(index_set.value)
+                collection[index] = value
+                return value
+
             case Expression.Literal() as literal:
                 return literal.value
 
@@ -296,6 +319,25 @@ class Interpreter:
                 raise NotImplementedError(
                     f"Expression type {type(expression)} not implemented"
                 )
+
+    def _normalize_index(self, index: object) -> int:
+        if not isinstance(index, (int, float)) or isinstance(index, bool):
+            raise RuntimeError(f"Index must be a number, got {type(index)}")
+
+        if int(index) != index:
+            raise RuntimeError(f"Index must be an integer, got {index}")
+
+        return int(index)
+
+    def _check_indexable(self, collection: object) -> None:
+        if not isinstance(collection, (list, str)):
+            raise RuntimeError(
+                f"Can only index lists and strings, got {type(collection)}")
+
+    def _check_index_bounds(self, collection: list | str, index: int) -> None:
+        if index < 0 or index >= len(collection):
+            raise RuntimeError(
+                f"Index {index} out of bounds for length {len(collection)}")
 
     def execute_block(
         self, statements: list[Statement.Statement], environment: Environment

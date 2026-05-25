@@ -147,6 +147,19 @@ class Resolver():
                 self.resolve(binary.left)
                 self.resolve(binary.right)
 
+            case Expression.ListLiteral() as list_literal:
+                for element in list_literal.elements:
+                    self.resolve(element)
+
+            case Expression.IndexGet() as index_get:
+                self.resolve(index_get.collection)
+                self.resolve(index_get.index)
+
+            case Expression.IndexSet() as index_set:
+                self.resolve(index_set.collection)
+                self.resolve(index_set.index)
+                self.resolve(index_set.value)
+
             case Expression.Literal():
                 return
 
